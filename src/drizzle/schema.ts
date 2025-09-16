@@ -42,7 +42,7 @@ export const UserPreferencesTable = pgTable('userPreferences', {
 
 export const PostTable = pgTable('post', {
     id: uuid('id').primaryKey().defaultRandom(),
-    title: varchar('title', { length: 255 }).notNull(),
+    title: varchar('title', {length: 255}).notNull(),
     averageRating: real('averageRating').notNull(),
     createdAt: timestamp('createdAt').defaultNow().notNull(),
     updatedAt: timestamp('updatedAt').defaultNow().notNull(),
@@ -53,7 +53,7 @@ export const PostTable = pgTable('post', {
 
 export const CategoryTable = pgTable('category', {
     id: uuid('id').primaryKey().defaultRandom(),
-    name: varchar('name', { length: 255 }).notNull(),
+    name: varchar('name', {length: 255}).notNull(),
 });
 
 export const PostCategoryTable = pgTable(
@@ -68,7 +68,52 @@ export const PostCategoryTable = pgTable(
     },
     (table) => {
         return {
-            pk: primaryKey({ columns: [table.postId, table.categoryId] }),
+            pk: primaryKey({columns: [table.postId, table.categoryId]}),
         };
     },
 );
+
+export const UserTableRelations = relations(UserTable, ({one, many}) => {
+    return {
+        preferences: one(UserPreferencesTable),
+        posts: many(PostTable),
+    };
+});
+
+export const UserPreferencesTableRelations = relations(UserPreferencesTable, ({one}) => {
+    return {
+        user: one(UserTable, {
+            fields: [UserPreferencesTable.userId],
+            references: [UserTable.id],
+        }),
+    };
+});
+
+export const PostTableRelations = relations(PostTable, ({one, many}) => {
+    return {
+        author: one(UserTable, {
+            fields: [PostTable.authorId],
+            references: [UserTable.id],
+        }),
+        postCategories: many(PostCategoryTable),
+    };
+});
+
+export const CategoryTableRelations = relations(CategoryTable, ({many}) => {
+    return {
+        posts: many(PostCategoryTable),
+    };
+});
+
+export const PostCategoryTableRelations = relations(PostCategoryTable, ({one}) => {
+    return {
+        post: one(PostTable, {
+            fields: [PostCategoryTable.postId],
+            references: [PostTable.id],
+        }),
+        category: one(CategoryTable, {
+            fields: [PostCategoryTable.categoryId],
+            references: [CategoryTable.id],
+        }),
+    };
+});
