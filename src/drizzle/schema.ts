@@ -39,3 +39,36 @@ export const UserPreferencesTable = pgTable('userPreferences', {
         .references(() => UserTable.id)
         .notNull(),
 });
+
+export const PostTable = pgTable('post', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    averageRating: real('averageRating').notNull(),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt').defaultNow().notNull(),
+    authorId: uuid('authorId')
+        .references(() => UserTable.id)
+        .notNull(),
+});
+
+export const CategoryTable = pgTable('category', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 255 }).notNull(),
+});
+
+export const PostCategoryTable = pgTable(
+    'postCategory',
+    {
+        postId: uuid('postId')
+            .references(() => PostTable.id)
+            .notNull(),
+        categoryId: uuid('categoryId')
+            .references(() => CategoryTable.id)
+            .notNull(),
+    },
+    (table) => {
+        return {
+            pk: primaryKey({ columns: [table.postId, table.categoryId] }),
+        };
+    },
+);
